@@ -13,6 +13,9 @@ export const generateLogs = (): TravelLog[] => {
       image: { uri: `http://10.0.2.2:8000/scene/home/img/image${(i % 5) + 1}.jpg` },
       author: `作者 ${i}`,
       avatar: { uri: `http://10.0.2.2:8000/scene/home/img/avatar${(i % 5) + 1}.jpg` },
+      content: '',
+      status: '',
+      rejectionReason: ''
     });
   }
   return logs;

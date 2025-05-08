@@ -1,4 +1,3 @@
-// scene/home/Home.tsx
 import React, { useEffect, useState } from 'react';
 import {
   SafeAreaView,
@@ -11,7 +10,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import SearchBar from './SearchBar';
 import TravelLogCard, { TravelLog } from './TravelLogCard';
-import BottomNav, { NavTab } from './BottomNav';
+import { NavTab } from './BottomNav';
 import { fetchTravelLogs, PAGE_SIZE, allLogs } from './TravelLogData';
 
 const Home: React.FC = () => {
@@ -92,8 +91,8 @@ const Home: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeContainer}>
       {/* 使用 LinearGradient 包裹整个页面 */}
-      <LinearGradient colors={['#FFFFFF', '#E9E9E9','#FFFFFF']} style={styles.gradient}>
-        <View style={styles.container}>
+      <LinearGradient colors={['#66B2FF', '#E9E9E9','#FFFFFF']} style={styles.gradient}>
+        {/* <View style={styles.container}> */}
           {/* 内容区域 */}
           <View style={styles.content}>
             <Text style={styles.header}>旅行日志</Text>
@@ -117,8 +116,8 @@ const Home: React.FC = () => {
             />
           </View>
           {/* 底部导航 */}
-          <BottomNav currentTab={currentTab} onTabPress={handleNavPress} />
-        </View>
+          {/* <BottomNav currentTab={currentTab} onTabPress={handleNavPress} /> */}
+        {/* </View> */}
       </LinearGradient>
     </SafeAreaView>
   );
@@ -131,15 +130,15 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
-  container: {
-    flex: 1,
-    position: 'relative',
-    backgroundColor: 'transparent', // 透明背景让渐变更明显
-  },
+  // container: {
+  //   flex: 1,
+  //   position: 'relative',
+  //   backgroundColor: 'transparent', // 透明背景让渐变更明显
+  // },
   content: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingBottom: 80, // 为底部导航预留空间
+    paddingBottom: 10, // 为底部导航预留空间
     // backgroundColor: 'rgba(255, 255, 255, 0.8)', // 半透明白色，可以使文本更易读
     borderRadius: 8,
     margin: 16,

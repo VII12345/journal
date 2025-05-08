@@ -7,6 +7,9 @@ export interface TravelLog {
   image: ImageSourcePropType;
   avatar: ImageSourcePropType;
   author: string;
+  content:string;
+  status:string;
+  rejectionReason:string;
 }
 
 interface TravelLogCardProps {
