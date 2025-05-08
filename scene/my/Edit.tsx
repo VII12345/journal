@@ -1,4 +1,3 @@
-// scene/my/Edit.tsx
 import React, { useState, useEffect } from 'react';
 import { 
   View,
@@ -14,12 +13,12 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { TravelLog } from '../home/TravelLogCard';
 
-interface PublishProps {
+interface EditProps {
   log?: TravelLog;
   onClose: () => void;
 }
 
-const Publish: React.FC<PublishProps> = ({ log, onClose }) => {
+const Edit: React.FC<EditProps> = ({ log, onClose }) => {
   const [title, setTitle] = useState(log?.title || '');
   const [content, setContent] = useState(log?.content || '');
 
@@ -150,4 +149,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Publish;
+export default Edit;

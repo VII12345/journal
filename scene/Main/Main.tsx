@@ -1,9 +1,8 @@
-// scene/Main.tsx
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import BottomNav, { NavTab } from '../home/BottomNav'; 
-import HomePage from '../home/Home';           // 首页组件
-//import Publish from '../publish/Publish'; // 发布游记页面组件
+import Home from '../home/Home';           // 首页组件
+import Publish from '../publish/Publish'; // 发布游记页面组件
 import My from '../my/My';           // 我的游记组件
 //import LoginPage from '../login/LoginPage';     // 登录组件
 
@@ -15,9 +14,14 @@ const Main: React.FC = () => {
   const renderCurrentPage = () => {
     switch (currentTab) {
       case 'home':
-        return <HomePage />;
-      // case 'publish':
-      //   return <Publish />;
+        return <Home />;
+       case 'publish':
+        return (
+          <Publish
+            onCancel={() => setCurrentTab('home')}
+            onSubmit={() => setCurrentTab('my')}
+          />
+        );
       case 'my':
         return <My />;
       // case 'login':

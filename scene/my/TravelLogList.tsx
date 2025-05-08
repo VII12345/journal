@@ -1,4 +1,3 @@
-// scene/my/TravelLogList.tsx
 import React from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 import { TravelLog } from '../home/TravelLogCard';

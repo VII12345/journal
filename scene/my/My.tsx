@@ -9,8 +9,9 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import TravelLogList from './TravelLogList';
-import Publish from './Edit';
+import Edit from './Edit';
 import { TravelLog } from '../home/TravelLogCard';
+
 
 const initialLogs: TravelLog[] = [
   {
@@ -105,7 +106,7 @@ const My: React.FC = () => {
       </View>
 
       <Modal visible={showPublish} animationType="slide">
-        <Publish log={editLog || undefined} onClose={() => setShowPublish(false)} />
+        <Edit log={editLog || undefined} onClose={() => setShowPublish(false)} />
       </Modal>
     </LinearGradient>
   );

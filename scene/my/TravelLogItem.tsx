@@ -1,4 +1,3 @@
-// scene/my/TravelLogItem.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { TravelLog } from '../home/TravelLogCard';
