@@ -1,23 +1,15 @@
-// scene/publish/Publish.tsx
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Image,
-  Keyboard,
-} from 'react-native';
+// Edit.tsx
+import React, { useState, useEffect, createContext } from 'react';
+import { Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { launchImageLibrary } from 'react-native-image-picker';
-import type { ImageLibraryOptions, PhotoQuality } from 'react-native-image-picker';
 import Video from 'react-native-video';
+import { DATABASE_URL,IMG_URL } from '../net';
 import { TravelLog } from '../home/TravelLogCard';
+import ImageSection from './ImageSection';
+import VideoSection from './VideoSection';
+import ImageViewerModal from './ImageViewerModal';
+import styles from './styles';
 
 export interface PublishProps {
   // 编辑模式下预填数据；新建时为 undefined
@@ -28,153 +20,269 @@ export interface PublishProps {
   onSubmit: () => void;
 }
 
+
+const MIN_INPUT_HEIGHT = 150;
+
 const Publish: React.FC<PublishProps> = ({ log, onCancel, onSubmit }) => {
-  const [title, setTitle] = useState<string>(log?.title || '');
-  const [content, setContent] = useState<string>(log?.content || '');
+  const [title, setTitle] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState<string>('');
+  const [content, setContent] = useState('');
+  const [inputHeight, setInputHeight] = useState(MIN_INPUT_HEIGHT);
+  const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const [videos, setVideos] = useState<string[]>([]);
+  // 用于全屏预览图片
+  const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
+  const [viewerImage, setViewerImage] = useState('');
 
-  // 图片相关状态：选择的图片 URI 与上传成功后返回的图片 URL
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
 
-  // 视频相关状态：选择的 URI 与上传成功后返回的视频 URL
-  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-  const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
+    // 模拟用户登录，并设置 userId（实际项目中需要根据登录接口返回的数据设置）
+    useEffect(() => {
+      setIsLoggedIn(true);
+      setUserId('1'); // 示例用户ID
+    }, []);
+  
+  // 选择并添加图片（这里仅保存选中的图片 URI）
+        const handleAddImage = () => {
+        launchImageLibrary({ mediaType: 'photo' }, (response) => {
+            if (response.didCancel) {
+            console.log('用户取消选择图片');
+            return;
+            }
+            if (response.errorCode) {
+            Alert.alert('错误', response.errorMessage || '选择图片出错');
+            return;
+            }
+            if (response.assets && response.assets.length > 0) {
+            const asset = response.assets[0];
+            if (asset.uri) {
+                // 确保更新的数组只包含有效的字符串，过滤掉 undefined
+                setImages(prev => {
+                const updatedImages = [...prev, asset.uri];
+                return updatedImages.filter((uri): uri is string => uri !== undefined);
+                });
+            }
+            }
+        });
+        };
 
-  useEffect(() => {
-    setTitle(log?.title || '');
-    setContent(log?.content || '');
-  }, [log]);
+  // 选择并添加视频（同上）
+        const handleAddVideo = () => {
+        launchImageLibrary({ mediaType: 'video' }, (response) => {
+            if (response.didCancel) {
+            console.log('用户取消选择视频');
+            return;
+            }
+            if (response.errorCode) {
+            Alert.alert('错误', response.errorMessage || '选择视频出错');
+            return;
+            }
+            if (response.assets && response.assets.length > 0) {
+            const asset = response.assets[0];
+            if (asset.uri) {
+                // 确保更新的数组只包含有效的字符串，过滤掉 undefined
+                setVideos(prev => {
+                const updatedVideos = [...prev, asset.uri];
+                return updatedVideos.filter((uri): uri is string => uri !== undefined);
+                });
+            }
+            }
+        });
+        };
 
-  // 上传图片到服务器（示例代码，实际接口地址需替换）
-  const uploadImageToServer = async (imageUri: string) => {
-    const filename = imageUri.split('/').pop();
-    const match = /\.(\w+)$/.exec(filename || '');
-    const type = match ? `image/${match[1]}` : 'image';
+// 删除图片
+const handleDeleteImage = (index: number) => {
+  setImages(prev => prev.filter((_, idx) => idx !== index)); // 删除指定索引的图片
+};
 
-    const formData = new FormData();
-    formData.append('photo', {
-      uri: imageUri,
-      name: filename,
-      type,
-    } as any);
+// 删除视频
+const handleDeleteVideo = (index: number) => {
+  setVideos(prev => prev.filter((_, idx) => idx !== index)); // 删除指定索引的视频
+};
 
-    try {
-      const response = await fetch('http://10.0.2.2:8080/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const result = await response.json();
-      console.log('上传图片成功: ', result);
-      // 假设服务器返回的 JSON 中带有 imageUrl 字段
-      setUploadedImageUrl(result.imageUrl);
-    } catch (error) {
-      console.error('上传图片过程中出错：', error);
-      throw error;
-    }
-  };
+// 打开大图查看
+const openImageViewer = (imgUri: string) => {
+  const fullUri =
+    imgUri.startsWith('http') || imgUri.startsWith('file://') || imgUri.startsWith('content://')
+      ? imgUri
+      : `${IMG_URL}${imgUri}`;
 
-  // 上传视频到服务器（示例代码，服务器需要支持接收 video 字段）
-  const uploadVideoToServer = async (videoUri: string) => {
-    const filename = videoUri.split('/').pop();
-    const match = /\.(\w+)$/.exec(filename || '');
-    const type = match ? `video/${match[1]}` : 'video';
+  setViewerImage(fullUri);
+  setIsImageViewerVisible(true);
+};
 
-    const formData = new FormData();
-    formData.append('video', {
-      uri: videoUri,
-      name: filename,
-      type,
-    } as any);
+// 提交上传请求
+const handleSubmit = async () => {
+  if (!title.trim() || !content.trim()) {
+    Alert.alert('提示', '请完整填写标题和内容');
+    return;
+  }
+  setLoading(true);
 
-    try {
-      const response = await fetch('http://10.0.2.2:8080/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const result = await response.json();
-      console.log('上传视频成功: ', result);
-      // 假设服务器返回的 JSON 中带有 videoUrl 字段
-      setUploadedVideoUrl(result.videoUrl);
-    } catch (error: any) {
-      console.error('上传视频过程中出错：', error.message || error);
-      throw error;
-    }
-  };
 
-  // 发布游记：点击按钮后再上传图片和视频（如果尚未上传），上传完毕后再调用 onSubmit
-  const handleSubmit = async () => {
+  try {
+
     Keyboard.dismiss();
     if (!title.trim() || !content.trim()) {
       Alert.alert('提示', '请完整填写标题和内容');
       return;
     }
-    try {
-      // 如果图片已选择，但尚未上传，则先上传
-      if (selectedImage && !uploadedImageUrl) {
-        await uploadImageToServer(selectedImage);
-      }
-      // 如果视频已选择，但尚未上传，则先上传
-      if (selectedVideo && !uploadedVideoUrl) {
-        await uploadVideoToServer(selectedVideo);
-      }
-      Alert.alert('成功', log ? '编辑成功' : '发布游记', [
-        { text: '确定', onPress: onSubmit },
-      ]);
-    } catch (error) {
-      Alert.alert('上传错误', '文件上传失败，请重试');
+
+const id = async (userId: string): Promise<string | null> => {
+  try {
+    const response = await fetch(`${DATABASE_URL}/Create_Travel_Log?user_id=${userId}`, {
+      method: 'POST',
+    });
+    const result = await response.json();
+    if (response.ok) {
+      console.log('创建成功，日志 ID：', result.id);
+      return result.id; // ✅ 返回 ID
+    } else {
+      console.error('创建失败：', result.error);
+      return null;
     }
-  };
+  } catch (error) {
+    console.error('网络错误：', error);
+    Alert.alert('错误', '无法连接服务器');
+    return null;
+  }
+};
 
-  const handleCancel = () => {
-    onCancel();
-  };
+const travelLogId = await id(userId);
+console.log('上传图片用的 travel_log_id：', travelLogId);
+console.log('travel_log_id 长度：', travelLogId?.length); // 可选链避免 null 报错
+const formData = new FormData();
+    formData.append('travel_log_id', travelLogId);
 
-  // 选择图片，仅保存图片 URI；上传延后到发布时执行
-  const handleUploadImage = () => {
-    const options: ImageLibraryOptions = {
-      mediaType: 'photo' as const,
-      quality: (1 as unknown) as PhotoQuality,
+
+
+    // 上传图片和视频
+    const uploadedImages = await Promise.all(
+      images
+        .filter(imgUri => imgUri.startsWith('file://') || imgUri.startsWith('content://'))
+        .map(async (imgUri) => {
+          const formData = new FormData();
+          formData.append('file', {
+            uri: imgUri,
+            name: 'upload.jpg',
+            type: 'image/jpeg',
+          } as any);
+          formData.append('filetype', 'image');
+          if (travelLogId) {
+            formData.append('travel_log_id', travelLogId);
+          }
+
+          const res = await fetch(`${DATABASE_URL}/upload_media`, {
+            method: 'POST',
+            body: formData,
+          });
+
+          const contentType = res.headers.get('Content-Type') || '';
+
+          if (!res.ok) {
+            const errorText = contentType.includes('application/json')
+              ? await res.text()
+              : '服务器错误';
+            throw new Error(`上传图片失败: ${errorText}`);
+          }
+
+          const json = await res.json();
+
+          if (!json.file_url) {
+            throw new Error('上传失败：响应中缺少 file_url');
+          }
+
+          return json.file_url;
+        })
+    );
+
+    // 上传视频
+    const uploadedVideos = await Promise.all(
+      videos
+        .filter(videoUri => videoUri.startsWith('file://') || videoUri.startsWith('content://'))
+        .map(async (videoUri) => {
+          const formData = new FormData();
+          formData.append('file', {
+            uri: videoUri,
+            name: 'upload_video.mp4',
+            type: 'video/mp4',
+          } as any);
+          formData.append('filetype', 'video');
+          if (travelLogId) {
+            formData.append('travel_log_id', travelLogId);
+          }
+
+          const res = await fetch(`${DATABASE_URL}/upload_media`, {
+            method: 'POST',
+            body: formData,
+          });
+
+          const contentType = res.headers.get('Content-Type') || '';
+          const status = res.status;
+          const responseText = await res.text();
+
+          console.log('上传视频响应状态:', status);
+          console.log('上传视频响应内容:', responseText);
+
+          if (!res.ok) {
+            throw new Error(`上传视频失败（状态码 ${status}）: ${responseText}`);
+          }
+
+          return videoUri; // 这里返回视频的 URI
+        })
+    );
+
+    // 合并本地上传的和已存在的远程资源
+    const payload = {
+      title: title.trim(),
+      content: content.trim(),
+      status: 'pending',
+      image: [
+        ...images.filter(uri => uri.startsWith('http')), // 已存在的远程图
+        ...uploadedImages,                               // 新上传的图
+      ],
+      videos: [
+        ...videos.filter(uri => uri.startsWith('http')), // 已存在的远程视频
+        ...uploadedVideos,                               // 新上传的视频
+      ]
     };
-    launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        console.log('用户取消了图片选择');
-      } else if (response.errorMessage) {
-        console.error('图片选择发生错误:', response.errorMessage);
-      } else if (response.assets && response.assets.length > 0) {
-        const uri = response.assets[0].uri;
-        if (uri) {
-          setSelectedImage(uri);
-        }
-      }
-    });
-  };
 
-  // 选择视频，仅保存视频 URI；上传视频操作延后到发布时执行
-  const handleUploadVideo = () => {
-    const options: ImageLibraryOptions = {
-      mediaType: 'video' as const,
-    };
-    launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        console.log('用户取消了视频选择');
-      } else if (response.errorMessage) {
-        console.error('视频选择发生错误:', response.errorMessage);
-      } else if (response.assets && response.assets.length > 0) {
-        const uri = response.assets[0].uri;
-        if (uri) {
-          setSelectedVideo(uri);
-        }
-      }
+    if (!travelLogId) {
+      Alert.alert('错误', '编辑失败：缺少日志 ID');
+      setLoading(false);
+      return;
+    }
+
+    const updateRes = await fetch(`${DATABASE_URL}/travel_logs/${travelLogId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     });
-  };
+
+    if (!updateRes.ok) {
+      throw new Error('保存失败，请稍后重试');
+    }
+
+    const updatedLog = await updateRes.json();
+    Alert.alert('成功', '编辑成功', [
+      { text: '确定', onPress: () => onSubmit() },
+    ]);
+  } catch (error: any) {
+    Alert.alert('错误', error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
-    <LinearGradient colors={['#66B2FF', '#E9E9E9','#FFFFFF']} style={styles.gradient}>
+    <LinearGradient colors={['#66B2FF', '#E9E9E9', '#FFFFFF']} style={styles.gradient}>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <ScrollView contentContainerStyle={styles.contentContainer}>
           <Text style={styles.header}>发布游记</Text>
           <TextInput
             style={styles.input}
@@ -184,141 +292,54 @@ const Publish: React.FC<PublishProps> = ({ log, onCancel, onSubmit }) => {
             onChangeText={setTitle}
           />
           <TextInput
-            style={[styles.input, styles.textArea]}
+            style={[styles.input, styles.textArea, { height: Math.max(MIN_INPUT_HEIGHT, inputHeight) }]}
             placeholder="请输入游记内容"
             placeholderTextColor="#888"
             value={content}
             onChangeText={setContent}
             multiline
             numberOfLines={6}
+            onContentSizeChange={(e) => setInputHeight(e.nativeEvent.contentSize.height)}
           />
-          <TouchableOpacity style={styles.uploadButton} onPress={handleUploadImage}>
-            <Text style={styles.uploadButtonText}>选择图片</Text>
+
+          {/* 图片部分，由单独的组件处理 */}
+          <ImageSection
+            images={images}
+            onAddImage={handleAddImage}
+            onDeleteImage={handleDeleteImage}
+            onImagePress={openImageViewer}
+          />
+
+          {/* 视频部分，由单独的组件处理 */}
+          <VideoSection
+            videos={videos}
+            onAddVideo={handleAddVideo}
+            onDeleteVideo={handleDeleteVideo}
+          />
+
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
+            <Text style={styles.submitButtonText}>发布游记</Text>
           </TouchableOpacity>
-          {selectedImage && (
-            <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
-          )}
-          {uploadedImageUrl && (
-            <Text style={styles.uploadInfo}>服务器返回图片地址: {uploadedImageUrl}</Text>
-          )}
-          <TouchableOpacity style={styles.uploadButton} onPress={handleUploadVideo}>
-            <Text style={styles.uploadButtonText}>选择视频</Text>
-          </TouchableOpacity>
-          {selectedVideo && (
-            <View style={styles.videoContainer}>
-              <Text style={styles.uploadInfo}>预览选择的视频:</Text>
-              <Video
-                source={{ uri: selectedVideo }}
-                style={styles.videoPreview}
-                controls
-                resizeMode="cover"
-              />
-            </View>
-          )}
-          {uploadedVideoUrl && (
-            <Text style={styles.uploadInfo}>服务器返回视频地址: {uploadedVideoUrl}</Text>
-          )}
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>
-              {log ? '保存编辑' : '发布游记'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+          <TouchableOpacity style={styles.cancelButton} onPress={() => onCancel()}>
             <Text style={styles.cancelButtonText}>取消</Text>
           </TouchableOpacity>
           <View style={styles.notice}>
             <Text style={styles.noticeText}>
-              用户上传的内容外网展示需符合相关法律法规，上线前设置审核机制非常有必要。
+              用户上传的内容须符合相关法律法规，上线前设置审核机制非常有必要。
             </Text>
-            <Text style={styles.noticeText}>
-              进入页面时已校验登录状态。
-            </Text>
+            <Text style={styles.noticeText}>进入页面时已校验登录状态。</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* 图片全屏预览组件 */}
+      <ImageViewerModal
+        visible={isImageViewerVisible}
+        imageUri={viewerImage}
+        onClose={() => setIsImageViewerVisible(false)}
+      />
     </LinearGradient>
   );
 };
-
-const styles = StyleSheet.create({
-  gradient: { flex: 1 },
-  container: { flex: 1 },
-  scrollContainer: { padding: 20, paddingTop: 40, paddingBottom: 40 },
-  header: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 16,
-    color: '#333',
-    backgroundColor: '#fff',
-    marginBottom: 16,
-  },
-  textArea: { height: 150, textAlignVertical: 'top' },
-  uploadButton: {
-    backgroundColor: '#FFA500',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  uploadButtonText: { color: '#fff', fontSize: 16 },
-  imagePreview: {
-    width: '100%',
-    height: 200,
-    marginBottom: 12,
-    resizeMode: 'cover',
-    borderRadius: 8,
-  },
-  videoContainer: { marginBottom: 12, alignItems: 'center' },
-  videoPreview: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    backgroundColor: '#000',
-  },
-  uploadInfo: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  submitButton: {
-    backgroundColor: '#007aff',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  submitButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  cancelButton: {
-    backgroundColor: '#888',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  cancelButtonText: { color: '#fff', fontSize: 16 },
-  notice: {
-    backgroundColor: '#f9f9f9',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 20,
-  },
-  noticeText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-});
 
 export default Publish;

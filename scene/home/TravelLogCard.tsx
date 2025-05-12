@@ -5,6 +5,7 @@ export interface TravelLog {
   id: string;
   title: string;
   image: ImageSourcePropType;
+  video:ImageSourcePropType
   avatar: ImageSourcePropType;
   author: string;
   content:string;
