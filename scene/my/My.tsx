@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import TravelLogList from './TravelLogList';
-import Edit from './Edit';
+import Edit from '../Edit/Edit';
 import { TravelLog } from '../home/TravelLogCard';
 import { DATABASE_URL, IMG_URL } from '../net';
 
