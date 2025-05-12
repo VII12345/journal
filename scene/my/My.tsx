@@ -84,7 +84,7 @@ const fetchLogsFromDB = () => {
         text: '确定',
         onPress: () => {
           // 调用删除接口（这里假设接口 URL 为 /travel_logs/{log.id}）
-          fetch(`${DATABASE_URL}/travel_logs/${log.id}`, {
+          fetch(`${DATABASE_URL}/Delete_Travel_Log/${log.id}`, {
             method: 'DELETE',
           })
             .then((response) => {
