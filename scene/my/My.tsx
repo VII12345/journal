@@ -12,8 +12,10 @@ import TravelLogList from './TravelLogList';
 import Edit from '../Edit/Edit';
 import { TravelLog } from '../home/TravelLogCard';
 import { DATABASE_URL, IMG_URL } from '../net';
+import Publish from '../publish/Publish'
+import BottomNav, { NavTab } from '../home/BottomNav'; 
 
-const My: React.FC = () => {
+const My: React.FC<{ onPublish: () => void }> = ({ onPublish }) => {
   const [logs, setLogs] = useState<TravelLog[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState<string>('');
@@ -100,15 +102,12 @@ const fetchLogsFromDB = () => {
       },
     ]);
   };
-
-  const handlePublish = () => {
-    // 发布新日志时，不传入编辑对象
-    setEditLog(null);
-    setShowPublish(true);
-  };
+  // const handlePublish = () => {
+  //   // 发布新日志时，不传入编辑对象
+  //   setCurrentTab('publish');
+  // };
 
   // Edit 组件完成编辑后回调
-  // 如果 updatedLog 存在，则表示编辑或新建日志成功，需要刷新日志列表
   const handleEditClose = (updatedLog?: TravelLog) => {
     setShowPublish(false);
     setEditLog(null);
@@ -134,7 +133,7 @@ const fetchLogsFromDB = () => {
         <Text style={styles.header}>我的游记</Text>
         <Text style={styles.userIdText}>用户ID：{userId}</Text>
         <TravelLogList logs={logs} onEdit={handleEdit} onDelete={handleDelete} />
-        <TouchableOpacity style={styles.publishButton} onPress={handlePublish}>
+        <TouchableOpacity style={styles.publishButton} onPress={onPublish }>
           <Text style={styles.publishButtonText}>发布游记</Text>
         </TouchableOpacity>
         <View style={styles.notice}>

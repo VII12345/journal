@@ -9,6 +9,12 @@ import My from '../my/My';           // 我的游记组件
 const Main: React.FC = () => {
   // 当前选中的 Tab，初始为 'home'
   const [currentTab, setCurrentTab] = useState<NavTab>('home');
+  
+
+  const handlePublish = () => {
+  // 发布新日志，跳转到发布页面
+  setCurrentTab('publish');
+  };
 
   // 根据当前 Tab 渲染对应的页面组件
   const renderCurrentPage = () => {
@@ -23,7 +29,7 @@ const Main: React.FC = () => {
           />
         );
       case 'my':
-        return <My />;
+        return <My onPublish={handlePublish} />;
       // case 'login':
       //   return <LoginPage />;
 

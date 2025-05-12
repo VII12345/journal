@@ -12,11 +12,10 @@ import ImageViewerModal from './ImageViewerModal';
 import styles from './styles';
 
 export interface PublishProps {
-  // 编辑模式下预填数据；新建时为 undefined
   log?: TravelLog;
   // 当点击取消时调用，父组件处理返回逻辑
   onCancel: () => void;
-  // 当点击发布（或保存编辑）后调用，父组件处理返回逻辑
+  // 当点击发布后调用，父组件处理返回逻辑
   onSubmit: () => void;
 }
 
