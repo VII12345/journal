@@ -1,3 +1,4 @@
+// journal/scene/home/TravelLogCard.tsx
 import React from 'react';
 import { TouchableOpacity, Text, Image, View, StyleSheet, ImageSourcePropType } from 'react-native';
 
@@ -7,30 +8,26 @@ export interface TravelLog {
   image: ImageSourcePropType;
   avatar: ImageSourcePropType;
   author: string;
-  content:string;
-  status:string;
-  rejectionReason:string;
+  content: string;
+  status: string;
+  rejectionReason: string;
 }
 
 interface TravelLogCardProps {
   log: TravelLog;
-  onPress: () => void;
+  onPress: () => void; // 确保定义了 onPress 属性
 }
 
 const TravelLogCard: React.FC<TravelLogCardProps> = ({ log, onPress }) => {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <Image source={log.image} style={styles.image} />
-
       <View style={styles.cardContent}>
-
-      <Text style={styles.title}>{log.title}</Text>
-      
+        <Text style={styles.title}>{log.title}</Text>
         <View style={styles.userInfo}>
           <Image source={log.avatar} style={styles.avatar} />
           <Text style={styles.author}>{log.author}</Text>
         </View>
-        
       </View>
     </TouchableOpacity>
   );
@@ -67,7 +64,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   title: {
-    bottom:15,
+    bottom: 15,
     fontSize: 18,
     fontWeight: '600',
     color: '#333',

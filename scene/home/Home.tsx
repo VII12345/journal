@@ -1,3 +1,4 @@
+// journal/scene/home/Home.tsx
 import React, { useEffect, useState } from 'react';
 import {
   SafeAreaView,
@@ -12,8 +13,11 @@ import SearchBar from './SearchBar';
 import TravelLogCard, { TravelLog } from './TravelLogCard';
 import { NavTab } from './BottomNav';
 import { fetchTravelLogs, PAGE_SIZE, allLogs } from './TravelLogData';
+import { useNavigation } from '@react-navigation/native';
+import { RootStackParamList, HomeNavigationProp } from '../../navigationTypes';
 
 const Home: React.FC = () => {
+  const navigation = useNavigation<HomeNavigationProp>();
   // 定义状态
   const [pagedLogs, setPagedLogs] = useState<TravelLog[]>([]);
   const [searchResults, setSearchResults] = useState<TravelLog[]>([]);
@@ -73,6 +77,7 @@ const Home: React.FC = () => {
   };
 
   const handleCardPress = (log: TravelLog) => {
+    navigation.navigate('TravelLogDetail', { log });
     console.log('选中日志：', log);
   };
 
@@ -130,16 +135,10 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
-  // container: {
-  //   flex: 1,
-  //   position: 'relative',
-  //   backgroundColor: 'transparent', // 透明背景让渐变更明显
-  // },
   content: {
     flex: 1,
     paddingHorizontal: 16,
     paddingBottom: 10, // 为底部导航预留空间
-    // backgroundColor: 'rgba(255, 255, 255, 0.8)', // 半透明白色，可以使文本更易读
     borderRadius: 8,
     margin: 16,
   },
