@@ -13,12 +13,16 @@ import TravelLogCard, { TravelLog } from './TravelLogCard';
 import { NavTab } from './BottomNav';
 import { fetchTravelLogs, PAGE_SIZE, allLogs } from './TravelLogData';
 import MasonryList from '@react-native-seoul/masonry-list';
-
 type SearchMode = 'title' | 'author';
+
+interface HomeProps {
+  onCardPress: (log: TravelLog) => void;
+}
 
 interface RenderTravelLogCardProps {
   log: TravelLog;
   onPress: () => void;
+  
 }
 
 const RenderTravelLogCard: React.FC<RenderTravelLogCardProps> = ({ log, onPress }) => {
@@ -31,7 +35,8 @@ const RenderTravelLogCard: React.FC<RenderTravelLogCardProps> = ({ log, onPress 
   );
 };
 
-const Home: React.FC = () => {
+const Home: React.FC<HomeProps> = ({ onCardPress }) => {
+
   // 基本状态
   const [pagedLogs, setPagedLogs] = useState<TravelLog[]>([]);
   const [searchResults, setSearchResults] = useState<TravelLog[]>([]);
@@ -102,6 +107,7 @@ const Home: React.FC = () => {
   };
 
   const handleCardPress = (log: TravelLog) => {
+    onCardPress(log); 
     console.log('选中日志：', log);
   };
 
