@@ -1,4 +1,3 @@
-// journal/scene/login/LoginPage.tsx
 import React, { useState } from 'react';
 import {
     View,
@@ -8,36 +7,34 @@ import {
     StyleSheet,
     Alert,
 } from 'react-native';
+import { DATABASE_URL } from '../net';
 
 interface LoginPageProps {
-    onLoginSuccess: () => void;
+  onLoginSuccess: (userId: string) => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [username, setUsername] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
 
     const handleLogin = async () => {
-        try {
-            const response = await fetch('http://10.0.2.2:8080/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, password }),
-            });
-            const data = await response.json();
-            if (response.ok) {
-                Alert.alert('登录成功');
-                onLoginSuccess();
-            } else {
-                Alert.alert('登录失败', data.error);
-            }
-        } catch (error) {
-            console.error('登录出错:', error);
-            Alert.alert('登录出错', '请稍后重试');
+    try {
+        const response = await fetch(`${DATABASE_URL}/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+            method: 'GET', // 修改为 GET 请求
+        });
+        const data = await response.json();
+        if (response.ok) {
+            Alert.alert('登录成功');
+            onLoginSuccess(data.user_id.toString()); // 假设后端返回了用户 ID
+        } else {
+            Alert.alert('登录失败', data.error);
         }
-    };
+    } catch (error) {
+        console.error('登录出错:', error);
+        Alert.alert('登录出错', '请稍后重试');
+    }
+};
+
 
     return (
         <View style={styles.container}>
