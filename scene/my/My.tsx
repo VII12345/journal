@@ -12,8 +12,7 @@ import TravelLogList from './TravelLogList';
 import Edit from '../Edit/Edit';
 import { TravelLog } from '../home/TravelLogCard';
 import { DATABASE_URL, IMG_URL } from '../net';
-import Publish from '../publish/Publish'
-import BottomNav, { NavTab } from '../home/BottomNav'; 
+
 
 const My: React.FC<{ onPublish: () => void }> = ({ onPublish }) => {
   const [logs, setLogs] = useState<TravelLog[]>([]);

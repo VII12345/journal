@@ -6,7 +6,7 @@ import Publish from '../publish/Publish';
 import My from '../my/My';
 import Detail from '../Detail/Detail';
 import { TravelLog } from '../home/TravelLogCard';
-
+import LoginPage from '../Login/LoginPage';
 
 const Main: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<NavTab>('home');
@@ -41,6 +41,8 @@ const Main: React.FC = () => {
         );
       case 'my':
         return <My onPublish={handlePublish} />;
+      case 'login':
+        return <LoginPage  onLoginSuccess={() => setCurrentTab('home')}/>
     }
   };
 
