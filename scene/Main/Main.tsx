@@ -11,7 +11,7 @@ import LoginPage from '../Login/LoginPage';
 const Main: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<NavTab>('home');
   const [selectedLog, setSelectedLog] = useState<TravelLog | null>(null);
-
+  const [userId, setUserId] = useState<string | null>(null);
   const handlePublish = () => {
     setCurrentTab('publish');
   };
@@ -25,6 +25,8 @@ const Main: React.FC = () => {
   };
 
   const renderCurrentPage = () => {
+    
+
     if (selectedLog) {
       return <Detail log={selectedLog} onBack={handleBack} />;
     }
@@ -40,11 +42,16 @@ const Main: React.FC = () => {
           />
         );
       case 'my':
-        return <My onPublish={handlePublish} />;
+        if (!userId) {
+              return <LoginPage onLoginSuccess={(id) => setUserId(id)} />;
+            }
+        return <My onPublish={handlePublish} userId={userId} />;
       case 'login':
-        return <LoginPage  onLoginSuccess={() => setCurrentTab('home')}/>
+        return <LoginPage onLoginSuccess={(id) => setUserId(id)} />;
+        
     }
   };
+
 
   return (
     <View style={styles.container}>

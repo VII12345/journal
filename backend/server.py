@@ -1,11 +1,14 @@
 import os
 import uuid
-
-from flask import Flask, request, jsonify
 import mysql.connector
-from mysql.connector import Error
+from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
-import datetime
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import mysql.connector
+import bcrypt
+
+
 app = Flask(__name__)
 
 # 定义 API 服务器的 IP 地址和端口号变量（用于记录和调试）
@@ -43,6 +46,35 @@ app.config['UPLOAD_FOLDER_VIDEO'] = UPLOAD_FOLDER_VIDEO
 
 def allowed_file(filename, allowed_exts):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_exts
+
+
+@app.route('/login', methods=['GET'])
+def login():
+    username = request.args.get('username')
+    password = request.args.get('password')
+
+    if not username or not password:
+        return jsonify({'error': '缺少用户名或密码'}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM user_account WHERE username = %s", (username,))
+        user = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not user:
+            return jsonify({'error': '用户不存在'}), 404
+
+        if check_password_hash(user['password_hash'], password):
+            return jsonify({'message': '登录成功', 'user_id': user['id']})
+        else:
+            return jsonify({'error': '密码错误'}), 401
+
+    except Exception as e:
+        print("数据库错误:", e)
+        return jsonify({'error': '服务器错误'}), 500
 
 @app.route('/media_delete', methods=['POST'])
 def delete_media():

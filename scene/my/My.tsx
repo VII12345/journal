@@ -14,10 +14,13 @@ import { TravelLog } from '../home/TravelLogCard';
 import { DATABASE_URL, IMG_URL } from '../net';
 
 
-const My: React.FC<{ onPublish: () => void }> = ({ onPublish }) => {
+const My: React.FC<{ userId: string; onPublish: () => void }> = ({
+  userId,
+  onPublish,
+}) => {
   const [logs, setLogs] = useState<TravelLog[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userId, setUserId] = useState<string>('');
+  const [Id, setId] = useState<string>('');
   const [showPublish, setShowPublish] = useState(false);
   const [editLog, setEditLog] = useState<TravelLog | null>(null);
 
@@ -55,10 +58,10 @@ const fetchLogsFromDB = () => {
 };
 
 
-  // 模拟用户登录，并设置 userId（实际项目中需要根据登录接口返回的数据设置）
+  // 用户登录，并设置 userId
   useEffect(() => {
     setIsLoggedIn(true);
-    setUserId('1'); // 示例用户ID
+    setId(userId); // 示例用户ID
   }, []);
 
   // 当 userId 设置好后，从数据库中加载该用户的日志
@@ -101,10 +104,6 @@ const fetchLogsFromDB = () => {
       },
     ]);
   };
-  // const handlePublish = () => {
-  //   // 发布新日志时，不传入编辑对象
-  //   setCurrentTab('publish');
-  // };
 
   // Edit 组件完成编辑后回调
   const handleEditClose = (updatedLog?: TravelLog) => {
